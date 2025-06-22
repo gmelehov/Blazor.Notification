@@ -7,10 +7,16 @@
   setTimeout(()=>{
     window.HUBPAGE.hub =
       new signalR.HubConnectionBuilder()
-        .withUrl("https://localhost:7118/BNHub")
-        .withServerTimeout(300000)
+        .withUrl("https://localhost:7118/BNHub", {
+          transport: signalR.HttpTransportType.WebSockets,
+          skipNegotiations: true
+        })
         .withAutomaticReconnect()
+
         .build();
+
+    window.HUBPAGE.hub.onclose(() => window.HUBPAGE.start());
+
     window.HUBPAGE.init();
   }, 350);
 
@@ -18,6 +24,8 @@
 
 
 @Body
+
+
 
 @code {
 

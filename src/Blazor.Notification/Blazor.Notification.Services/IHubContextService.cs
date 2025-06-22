@@ -28,4 +28,10 @@ public interface IHubContextService
 
   IEnumerable<ServiceClientDto> GetActiveClientDtos();
 
+
+  ServiceClientDto GetCurrentClientDto(HubCallerContext ctx);
+
+
+  Task<IEnumerable<string>> CreateBackgroundSystemMessage();
+
 }

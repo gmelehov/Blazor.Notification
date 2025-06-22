@@ -59,6 +59,7 @@ export var HubEvents;
     HubEvents["RcvMessagesUpdateEvent"] = "RcvMessagesUpdateEvent";
     HubEvents["RcvSystemMessage"] = "RcvSystemMessage";
     HubEvents["RcvClientUpdate"] = "RcvClientUpdate";
+    HubEvents["RequestClientsUpdate"] = "RequestClientsUpdate";
 })(HubEvents || (HubEvents = {}));
 /**
  * Названия методов, определенных в хабе SignalR, выполняющихся на бэкенде

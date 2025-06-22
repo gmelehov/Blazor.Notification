@@ -52,23 +52,17 @@ export class HubPage
   }
 
 
-  //public messages: IMessageDto[] = [];
+  public get clientsMessages(): IMessageDto[]
+  {
+    return this.clientsList.flatMap(m => (m.Messages as IMessageDto[]));
+  }
 
-
-  //public get unreadCommonMessagesCount()
-  //{
-  //  let messages = this.client !== null ? this.messages.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).length : 0;
-  //  return messages;
-  //}
 
 
 
   static dotNetHelper;
 
-  //static clientsListRef;
-
-  //static commonChatRef;
-
+  
 
 
   /** 
@@ -79,20 +73,18 @@ export class HubPage
     window.onfocus = () =>
     {
       this.isActive = true;
-      document.title = `${this.connection?.Caller.Name} --- ${this.isActive}`;
+      this.setDocumentTitle();
       setTimeout(() =>
       {
         this.SendActiveClientsList();
         this.MarkUnreadMessages(this.filterUnreadMessagesToMark());
       })      
-      //this.client.UnreadCommonMsg = this.filterUnreadMessagesToMark().length;
-      //HubPage.updateClientInfo(this.client);
     }
 
     window.onblur = () =>
     {
       this.isActive = false;
-      document.title = `${this.connection?.Caller.Name} --- ${this.isActive}`;
+      this.setDocumentTitle();
     }
 
     this.hub.start().then(function ()
@@ -100,7 +92,11 @@ export class HubPage
       
     }).catch(function (err)
     {
-      return console.error(err.toString());
+      console.error(err.toString());
+      setTimeout(() =>
+      {
+        this.start();
+      }, 1000)
     });
   }
 
@@ -156,6 +152,8 @@ export class HubPage
     });
     this.hub.on(HubEvents.RcvMessagesUpdateEvent, this.onRcvMessagesUpdateEvent);
     this.hub.on(HubEvents.RcvClientUpdate, this.onRcvClientUpdate);
+    this.hub.on(HubEvents.RequestClientsUpdate, this.onRequestClientsUpdate);
+    this.hub.on("RcvMyClientDto", this.onRcvMyClientDto);
 
     this.start();
   }
@@ -215,8 +213,32 @@ export class HubPage
   onRcvMyConnection = (conn: IConnection) =>
   {
     this.connection = conn;
-    document.title = conn.Caller.Name;
-    //console.dir(conn);
+    this.setDocumentTitle();
+    if (!window.sessionStorage.getItem("selectedClientId"))
+    {
+      window.sessionStorage.setItem('selectedClientId', "0");
+    }
+    
+    this.hub.invoke("GetMyClientDto");
+  }
+
+
+  onRcvMyClientDto = (clientDto: IServiceClientDto) =>
+  {
+    if (!this.clientsList.find(f => f.Id == clientDto.Id))
+    {
+      let selClientId = Number.parseInt(window.sessionStorage.getItem('selectedClientId')) ?? 0;
+      clientDto.IsSelected = clientDto.Id === selClientId;
+      clientDto.IsCurrent = this.connection.CallerId === clientDto.Id;
+      this.clientsList.push(clientDto);
+
+      HubPage.updateClientsList(this.clientsList);
+      this.setSelectedClientId(selClientId);
+      let messages = this.client.Messages;
+      HubPage.addMessagesToCommonChat(messages);
+      let unreadMessageIds = this.filterUnreadMessagesToMark();
+      this.MarkUnreadMessages(unreadMessageIds);
+    }
     this.SendActiveClientsList();
   }
 
@@ -240,7 +262,7 @@ export class HubPage
    * Обработчик события RcvActiveClients.
    * @param clients
    */
-  onRcvActiveClients = async (clients: IServiceClientDto[]) =>
+  onRcvActiveClients = (clients: IServiceClientDto[]) =>
   {
     this.clientsList = [];
     let selClientId = Number.parseInt(window.sessionStorage.getItem('selectedClientId')) ?? 0;
@@ -251,10 +273,21 @@ export class HubPage
       this.clientsList.push(cl);
     });
 
-    await HubPage.updateClientsList(this.clientsList);
+    HubPage.updateClientsList(this.clientsList);
     this.setSelectedClientId(selClientId);
-    let messages = this.client.Messages;
-    await HubPage.addMessagesToCommonChat(messages);
+
+    let commonMessages = this.client.Messages.filter(f => f.MsgRoute == MessageRoute.Common);
+    HubPage.addMessagesToCommonChat(commonMessages);
+
+    let privateMessages = this.client.Messages.filter(
+      f => f.MsgRoute == MessageRoute.Private
+        //&& selClientId != 0
+        //&& (f.SenderId == this.client.Id || f.SenderId == selClientId || f.ReceiverId == this.client.Id || f.ReceiverId == selClientId)
+    );
+    HubPage.addMessagesToPrivateChat(privateMessages);
+
+    let unreadMessageIds = this.filterUnreadMessagesToMark();
+    this.MarkUnreadMessages(unreadMessageIds);
   }
 
   /**
@@ -270,13 +303,18 @@ export class HubPage
       this.clientsList.splice(index, 1, client);
     }
 
-    HubPage.addMessagesToCommonChat(client.Messages);
-
     let unreadMessageIds = this.filterUnreadMessagesToMark();
-    if (unreadMessageIds.length > 0)
-    {
-      this.MarkUnreadMessages(unreadMessageIds);
-    }
+    this.MarkUnreadMessages(unreadMessageIds);
+  }
+
+  /**
+   * Обрабатывает событие RequestClientsUpdate.
+   */
+  onRequestClientsUpdate = () =>
+  {
+    this.SendActiveClientsList();
+    let unreadMessageIds = this.filterUnreadMessagesToMark();
+    this.MarkUnreadMessages(unreadMessageIds);
   }
 
 
@@ -359,7 +397,7 @@ export class HubPage
    */
   onRcvMessagesUpdateEvent = (messages: IMessageDto[]) =>
   {
-    console.dir(messages);
+    //console.dir(messages);
     messages.forEach(msg =>
     {
       let foundMsg = this.client.Messages.find(f => f.Id === msg.Id);
@@ -368,19 +406,14 @@ export class HubPage
     });
     //this.client.UnreadCommonMsg = this.filterUnreadMessagesToMark().length;
 
-    setTimeout(() =>
+    this.SendActiveClientsList();
+
+    if (!!messages.length)
     {
-      if (!!messages.length)
-      {
-        HubPage.markCommonChatMessagesAsRead(messages);
-      }
+      HubPage.markCommonChatMessagesAsRead(messages);
+    }
 
-      this.SendActiveClientsList();
-      
-      //this.client.UnreadCommonMsg = this.filterUnreadMessagesToMark().length;
-
-      //HubPage.updateClientInfo(this.client);
-    }, 1000);
+    
   }
 
 
@@ -447,7 +480,13 @@ export class HubPage
 
   CreateSystemMessage(text: string)
   {
-    this.hub.invoke(HubMethods.CreateSystemMessage, text);
+    this.hub.invoke("PublishCommonMessage", text);
+  }
+
+
+  CreatePrivateMessage(receiverId: number, receiverCid: string, text: string)
+  {
+    this.hub.invoke("PublishPrivateMessage", receiverId, receiverCid, text);
   }
 
 
@@ -456,6 +495,13 @@ export class HubPage
 
 
 
+  /**
+   * Устанавливает название текущей вкладки в браузере.
+   */
+  setDocumentTitle = () =>
+  {
+    document.title = `${this.connection?.Caller?.Name} --- ${this.isActive}`;
+  }
 
 
   /**
@@ -466,8 +512,24 @@ export class HubPage
   setSelectedClientId = (clientId: number) =>
   {
     window.sessionStorage.setItem('selectedClientId', clientId.toString());
-    let clientName = !!clientId ? this.clientsList.find(f => f.Id === clientId)?.Name : null;
-    HubPage.updateSendButtonText(clientId, clientName);
+    let client = !!clientId ? this.clientsList.find(f => f.Id === clientId) : null;
+    let clientName = client?.Name;
+    let clientCid = client?.Cid;
+
+    if (clientId != 0 && this.hasPrivateMessagesWith(clientId))
+    {
+      let privateMessages: IMessageDto[] = this.client.Messages.filter(
+        f => f.MsgRoute == MessageRoute.Private && clientId != 0
+          && (f.SenderId == this.client.Id || f.SenderId == clientId || f.ReceiverId == this.client.Id || f.ReceiverId == clientId)
+      );      
+      HubPage.addMessagesToPrivateChat(privateMessages);
+    }
+    else
+    {
+      HubPage.addMessagesToPrivateChat([]);
+    }
+
+    HubPage.updateSendButtonText(clientId, clientName, clientCid);
   }
 
 
@@ -481,6 +543,13 @@ export class HubPage
     {
       return this.client.Messages.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).map(m => m.Id);
     }
+  }
+
+
+  hasPrivateMessagesWith = (clientId: number): boolean =>
+  {
+    //return this.client.Messages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || (s.SenderId == s.ReceiverId && s.SenderId == this.client.Id)));
+    return this.clientsMessages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || s.ReceiverId == clientId));
   }
 
 
@@ -499,9 +568,9 @@ export class HubPage
 
 
 
-  static async updateSendButtonText(clientId: number, clientName: string)
+  static async updateSendButtonText(clientId: number, clientName: string, clientCid: string)
   {
-    await HubPage.dotNetHelper.invokeMethodAsync("UpdateSendBtnText", clientId, clientName);
+    await HubPage.dotNetHelper.invokeMethodAsync("UpdateSendBtnText", clientId, clientName, clientCid);
   }
 
 
@@ -520,6 +589,12 @@ export class HubPage
   static async addMessagesToCommonChat(messages: IMessageDto[])
   {
     await HubPage.dotNetHelper.invokeMethodAsync("AddMessages", messages);
+  }
+
+
+  static async addMessagesToPrivateChat(messages: IMessageDto[])
+  {
+    await HubPage.dotNetHelper.invokeMethodAsync("AddPrivateMessages", messages);
   }
 
 

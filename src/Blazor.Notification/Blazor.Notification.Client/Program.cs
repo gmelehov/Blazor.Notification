@@ -34,7 +34,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode(o => o.DisableWebSocketCompression = true)
+   .AddInteractiveServerRenderMode()
     ;
 
 

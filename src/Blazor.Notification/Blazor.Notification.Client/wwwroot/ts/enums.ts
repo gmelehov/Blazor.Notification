@@ -138,6 +138,8 @@ export enum HubEvents
 
   RcvClientUpdate = "RcvClientUpdate",
 
+  RequestClientsUpdate = "RequestClientsUpdate",
+
 }
 
 

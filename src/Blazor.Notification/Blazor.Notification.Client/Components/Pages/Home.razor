@@ -14,19 +14,19 @@
 
   <header>
     <div class="main-title">Blazor.Notification</div>
-    <div class="private-title">Private chat</div>
+    <div class="private-title">@PrivateChatText</div>
     <div class="common-title">Common chat</div>
   </header>
 
 
   <aside>
     <ClientsList @ref="ClientsListRef" ItemsList="@ServiceClients" SelectedClientId="@SelectedClientId" />
-    <MessageEditor @ref="MessageEditorRef" BtnText="@BtnText" />
+    <MessageEditor @ref="MessageEditorRef" BtnText="@BtnText" IsPrivate="@PublishToPrivate" />
   </aside>
 
 
   <main>
-    <PrivateMessages @ref="PrivateMessagesRef" />
+    <PrivateMessages @ref="PrivateMessagesRef" IsHidden="!PublishToPrivate" />
     <CommonMessages @ref="CommonMessagesRef" />
   </main>
 
@@ -60,22 +60,27 @@
 
 
   [Parameter]
-  public string BtnText { get; set; } = "SEND TO COMMON CHAT";
+  public string PrivateChatText { get; set; } = "Private chat";
 
 
   [Parameter]
+  public string BtnText { get; set; } = "SEND TO COMMON CHAT";
+
+
   public string Cid { get; set; } = "";
 
   [Parameter]
   public List<ServiceClientDto> ServiceClients { get; set; } = [];
 
 
-  [Parameter]
   public List<MessageDto> CommonMessagesList { get; set; } = [];
 
 
   public int SelectedClientId { get; set; }
 
+
+  [Parameter]
+  public bool PublishToPrivate { get; set; } = false;
 
 
 
@@ -104,26 +109,54 @@
 
 
   [JSInvokable]
-  public async Task AddMessages(IEnumerable<MessageDto> messages)
+  public void AddMessages(IEnumerable<MessageDto> messages)
   {
     CommonMessagesRef.AddMessages(messages);
-    await InvokeAsync(StateHasChanged);
+    StateHasChanged();
   }
 
 
   [JSInvokable]
-  public async Task UpdateMessages(IEnumerable<MessageDto> messages)
+  public void UpdateMessages(IEnumerable<MessageDto> messages)
   {
     CommonMessagesRef.UpdateMessages(messages);
-    await InvokeAsync(StateHasChanged);
+    StateHasChanged();
+  }
+
+
+
+  [JSInvokable]
+  public void AddPrivateMessages(IEnumerable<MessageDto> messages)
+  {
+    PrivateMessagesRef.AddMessages(messages);
+    StateHasChanged();
   }
 
 
   [JSInvokable]
-  public async Task UpdateSendBtnText(int clientId, string clientName)
+  public void UpdatePrivateMessages(IEnumerable<MessageDto> messages)
   {
+    PrivateMessagesRef.UpdateMessages(messages);
+    StateHasChanged();
+  }
+
+
+
+
+
+
+
+
+
+
+  [JSInvokable]
+  public async Task UpdateSendBtnText(int clientId, string clientName, string clientCid)
+  {
+    this.PrivateChatText = clientId != 0 ? $"Private chat with {clientName}" : $"Private chat";
     this.BtnText = clientId != 0 && !string.IsNullOrWhiteSpace(clientName) ? $"SEND TO {clientName}" : "SEND TO COMMON CHAT";
+    this.PublishToPrivate = clientId != 0;
     MessageEditorRef.SetBtnText(BtnText);
+    MessageEditorRef.SetMessageRoute(clientId, clientCid);
     await InvokeAsync(StateHasChanged);
   }
 

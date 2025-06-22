@@ -11,8 +11,6 @@ namespace Blazor.Notification.Models;
 public class MessageToClient
 {
 
-
-
   /// <summary>
   /// Identity
   /// </summary>

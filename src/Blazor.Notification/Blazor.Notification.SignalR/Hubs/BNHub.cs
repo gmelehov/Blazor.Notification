@@ -135,6 +135,9 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
   /// <returns></returns>
   public async Task GetMyConnection() => await Clients.Caller.RcvMyConnection(_hubContextService.GetCurrentConnection(Context));
 
+
+  public async Task GetMyClientDto() => await Clients.Caller.RcvMyClientDto(_hubContextService.GetCurrentClientDto(Context));
+
   /// <summary>
   /// <para>Запрос на отправку вызвавшему посетителю данных о его подключении.</para>
   /// </summary>
@@ -211,6 +214,86 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
 
     await Clients.Caller.RcvActiveClients(clients);
   }
+
+
+
+
+
+  public async Task PublishCommonMessage(string text)
+  {
+    var caller = _hubContextService.GetCurrentCaller(Context);
+
+    var message = new Message
+    {
+      CreatedOn = DateTime.Now,
+      Type = MessageType.Client,
+      MsgRoute = MessageRoute.Common,
+      Text = text,
+      SenderId = caller.Id,
+    };
+
+    var clients = _hubContextService.GetActiveClientDtos();
+
+    foreach (var client in clients)
+    {
+      message.Receivers.Add(new MessageToClient
+      {
+        Status = MessageStatus.Sent,
+        Message = message,
+        ReceiverId = client.Id,
+      });
+
+    }
+
+    _appDbContext.Messages.Add(message);
+    _appDbContext.SaveChanges();
+
+    clients = _hubContextService.GetActiveClientDtos();
+    await Clients.All.RcvActiveClients(clients);
+
+  }
+
+
+
+
+  public async Task PublishPrivateMessage(int receiverId, string receiverCid, string text)
+  {
+    var caller = _hubContextService.GetCurrentCaller(Context);
+
+    var message = new Message
+    {
+      CreatedOn = DateTime.Now,
+      Type = MessageType.Client,
+      MsgRoute = MessageRoute.Private,
+      Text = text,
+      SenderId = caller.Id,
+    };
+
+    caller.OutBox.Add(message);
+
+    message.Receivers.Add(new MessageToClient
+    {
+      Message = message,
+      Status = MessageStatus.Sent,
+      ReceiverId = receiverId,
+    });
+
+    message.Receivers.Add(new MessageToClient
+    {
+      Message = message,
+      Status = MessageStatus.Sent,
+      ReceiverId = caller.Id,
+    });
+
+    _appDbContext.ServiceClients.Update(caller);
+    _appDbContext.Messages.Add(message);
+    _appDbContext.SaveChanges();
+
+    await Clients.Clients([receiverCid, caller.ActiveConnCid]).RcvActiveClients(_hubContextService.GetActiveClientDtos());
+  }
+
+
+
 
 
   

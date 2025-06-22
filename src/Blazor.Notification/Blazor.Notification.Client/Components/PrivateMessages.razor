@@ -1,12 +1,60 @@
-﻿
+﻿@using Blazor.Notification.Models.Dtos
+@rendermode InteractiveServer
 
 
 <section>
+
+  <ul hidden="@IsHidden">
+    @foreach (var item in Messages)
+    {
+      <Message Id="@item.Id"
+               MessageId="@item.MessageId"
+               SenderName="@item.SenderName"
+               CreatedOn="@item.CreatedOn"
+               Text="@item.Text"
+               Status="@item.Status"
+               ReceiverId="@item.ReceiverId"
+               ReceiverCid="@item.ReceiverCid"
+               ReadOn="@item.ReadOn"
+               MsgRoute="@item.MsgRoute" />
+    }
+  </ul>
 
 </section>
 
 
 
 @code {
+
+  [Parameter]
+  public List<MessageDto> Messages { get; set; } = [];
+
+
+  [Parameter]
+  public bool IsHidden { get; set; }
+
+
+
+  public void AddMessages(IEnumerable<MessageDto> messages)
+  {
+    Messages = messages.ToList();
+    //Messages.AddRange(messages);
+    StateHasChanged();
+  }
+
+
+  public void UpdateMessages(IEnumerable<MessageDto> messages)
+  {
+    foreach (var msg in messages)
+    {
+      var foundMsg = Messages.FirstOrDefault(f => f.Id == msg.Id);
+      if (foundMsg != null)
+      {
+        foundMsg.Status = msg.Status;
+        foundMsg.ReadOn = msg.ReadOn;
+      }
+    }
+    StateHasChanged();
+  }
 
 }

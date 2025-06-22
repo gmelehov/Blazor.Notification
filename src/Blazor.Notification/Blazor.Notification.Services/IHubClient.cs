@@ -47,6 +47,9 @@ public interface IHubClient
   /// <returns></returns>
   Task RcvMyConnection(Connection conn);
 
+
+  Task RcvMyClientDto(ServiceClientDto serviceClientDto);
+
   /// <summary>
   /// <para>Передает в клиентский браузер объект текущего клиентского подключения.</para>
   /// </summary>
@@ -100,6 +103,13 @@ public interface IHubClient
 
 
   Task RcvClientUpdate(ServiceClientDto serviceClient);
+
+  /// <summary>
+  /// Инициирует на клиенте вызов серверного метода для получения обновленного списка
+  /// активных клиентов, подключенных к хабу.
+  /// </summary>
+  /// <returns></returns>
+  Task RequestClientsUpdate();
 
 
 

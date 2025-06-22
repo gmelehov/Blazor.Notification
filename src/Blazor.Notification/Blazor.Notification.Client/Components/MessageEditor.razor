@@ -30,10 +30,30 @@
   public string BtnText { get; set; }
 
 
+  [Parameter]
+  public bool IsPrivate { get; set; }
+
+
+  [Parameter]
+  public int ReceiverId { get; set; }
+
+
+  [Parameter]
+  public string ReceiverCid { get; set; }
+
+
 
   public async Task HandleBtnClick()
   {
-    await jsRuntime.InvokeVoidAsync("HUBPAGE.CreateSystemMessage", Text);
+    if (IsPrivate)
+    {
+      await jsRuntime.InvokeVoidAsync("HUBPAGE.CreatePrivateMessage", ReceiverId, ReceiverCid, Text);
+    }
+    else
+    {
+      await jsRuntime.InvokeVoidAsync("HUBPAGE.CreateSystemMessage", Text);
+    }
+
     Text = null;
     await InvokeAsync(StateHasChanged);
   }
@@ -45,5 +65,18 @@
     BtnText = btnText;
     StateHasChanged();
   }
+
+
+
+  public void SetMessageRoute(int receiverId, string receiverCid)
+  {
+    ReceiverId = receiverId;
+    ReceiverCid = receiverCid;
+    IsPrivate = receiverId != 0;
+    StateHasChanged();
+  }
+
+
+
 
 }

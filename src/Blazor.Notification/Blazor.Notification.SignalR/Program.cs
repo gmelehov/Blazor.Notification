@@ -1,6 +1,7 @@
 ﻿using Blazor.Notification.SignalR.Data;
 using Blazor.Notification.SignalR.Extensions;
 using Blazor.Notification.SignalR.Hubs;
+using Blazor.Notification.SignalR.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -33,8 +34,8 @@ builder.Services
 builder.Services.AddSignalR(opts =>
 {
   opts.MaximumReceiveMessageSize = 1048576;
-  opts.KeepAliveInterval = TimeSpan.FromSeconds(300);
-  opts.ClientTimeoutInterval = TimeSpan.FromSeconds(300);
+  opts.KeepAliveInterval = TimeSpan.FromSeconds(10);
+  opts.ClientTimeoutInterval = TimeSpan.FromSeconds(20);
 })
   .AddNewtonsoftJsonProtocol(opts =>
   {
@@ -43,6 +44,9 @@ builder.Services.AddSignalR(opts =>
     opts.PayloadSerializerSettings.Formatting = Formatting.None;
     opts.PayloadSerializerSettings.ContractResolver = new DefaultContractResolver() { NamingStrategy = null };
   });
+
+
+//builder.Services.AddHostedService<NotificationWorker>();
 
 
 var app = builder.Build();

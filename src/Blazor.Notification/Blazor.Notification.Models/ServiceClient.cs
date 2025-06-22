@@ -18,7 +18,7 @@ public class ServiceClient
 
 
   [NotMapped]
-  public string Name => $"client #{(100 + Id).ToString().Substring(1)}";
+  public string Name => $"client #{(1000 + Id).ToString().Substring(1)}";
 
   /// <summary>
   /// <para>Дата и время последнего подключения этого клиента.</para>
