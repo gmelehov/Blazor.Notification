@@ -3,6 +3,7 @@
 @inject IJSRuntime jsRuntime
 
 
+
 @if(ItemsList is not null)
 {
   <ul>
@@ -25,26 +26,6 @@
 @code {
 
 
-  // private IJSObjectReference? module;
-
-
-  // private DotNetObjectReference<ClientsList>? clientsListRef;
-
-
-  //public bool firstRender = true;
-
-
-  // protected override async Task OnAfterRenderAsync(bool firstRender)
-  // {
-  //   if (firstRender)
-  //   {
-  //     module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/hubPage.js");
-  //     clientsListRef = DotNetObjectReference.Create(this);
-  //     await module.InvokeVoidAsync("HubPage.setDotNetHelper", nameof(clientsListRef), clientsListRef);
-  //   }
-  // }
-
-
 
   public async Task HandleClientInfoSelect(int clientId)
   {
@@ -58,12 +39,5 @@
     await jsRuntime.InvokeVoidAsync("HUBPAGE.setSelectedClientId", clientId);
     await InvokeAsync(StateHasChanged);
   }
-
-
-
-  // public void Dispose()
-  // {
-  //   clientsListRef?.Dispose();
-  // }
 
 }

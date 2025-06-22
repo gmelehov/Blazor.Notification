@@ -39,7 +39,6 @@
   public void AddMessages(IEnumerable<MessageDto> messages)
   {
     Messages = messages.ToList();
-    //Messages.AddRange(messages);
     StateHasChanged();
   }
 
@@ -57,8 +56,5 @@
     }
     StateHasChanged();
   }
-
-
-
 
 }

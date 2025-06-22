@@ -27,6 +27,7 @@
 
 @code {
 
+
   [Parameter]
   public List<MessageDto> Messages { get; set; } = [];
 
@@ -39,7 +40,6 @@
   public void AddMessages(IEnumerable<MessageDto> messages)
   {
     Messages = messages.ToList();
-    //Messages.AddRange(messages);
     StateHasChanged();
   }
 

@@ -31,16 +31,4 @@ public class ClientsListVM : ComponentBase
     StateHasChanged();
   }
 
-
-
-  
-
-
-
-
-
-  
-
-
-
 }
