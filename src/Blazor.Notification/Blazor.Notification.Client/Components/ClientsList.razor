@@ -1,0 +1,69 @@
+﻿@inherits Blazor.Notification.Client.Components.ClientsListVM
+@rendermode InteractiveServer
+@inject IJSRuntime jsRuntime
+
+
+@if(ItemsList is not null)
+{
+  <ul>
+    @foreach(var item in ItemsList)
+    {
+      <ClientInfo 
+        Name="@item.Name" 
+        ClientId="@item.Id" 
+        ConnId="@item.Cid" 
+        IsSelected="@item.IsSelected" 
+        IsCurrent="@item.IsCurrent" 
+        UnreadCommonMsg="@item.UnreadCommonMsg"
+        OnClick="@HandleClientInfoSelect" 
+        />
+    }
+  </ul>
+}
+
+
+@code {
+
+
+  // private IJSObjectReference? module;
+
+
+  // private DotNetObjectReference<ClientsList>? clientsListRef;
+
+
+  //public bool firstRender = true;
+
+
+  // protected override async Task OnAfterRenderAsync(bool firstRender)
+  // {
+  //   if (firstRender)
+  //   {
+  //     module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/hubPage.js");
+  //     clientsListRef = DotNetObjectReference.Create(this);
+  //     await module.InvokeVoidAsync("HubPage.setDotNetHelper", nameof(clientsListRef), clientsListRef);
+  //   }
+  // }
+
+
+
+  public async Task HandleClientInfoSelect(int clientId)
+  {
+    ItemsList.ForEach(item => item.IsSelected = false);
+    if (clientId > 0)
+    {
+      ItemsList.FirstOrDefault(f => f.Id == clientId).IsSelected = true;
+    }
+    SelectedClientId = clientId;
+
+    await jsRuntime.InvokeVoidAsync("HUBPAGE.setSelectedClientId", clientId);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+
+  // public void Dispose()
+  // {
+  //   clientsListRef?.Dispose();
+  // }
+
+}

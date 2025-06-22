@@ -1,0 +1,82 @@
+﻿@rendermode InteractiveServer
+@using Blazor.Notification.Models.Dtos
+
+
+<section>
+
+  <ul>
+    @foreach (var item in Messages)
+    {
+      <Message 
+        Id="@item.Id" 
+        SenderName="@item.SenderName" 
+        CreatedOn="@item.CreatedOn" 
+        Text="@item.Text" 
+        Status="@item.Status" 
+        ReceiverId="@item.ReceiverId" 
+        MsgRoute="@item.MsgRoute"
+        />
+    }
+  </ul>
+
+  </section>
+
+
+
+@code {
+
+
+  // private IJSObjectReference? module;
+
+  // private DotNetObjectReference<CommonChat>? commonChatRef;
+
+
+
+  [Parameter]
+  public List<MessageDto> Messages { get; set; } = [];
+
+
+
+
+  // protected override async Task OnAfterRenderAsync(bool firstRender)
+  // {
+  //   firstRender = true;
+  //   if (firstRender)
+  //   {
+  //     module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/hubPage.js");
+  //     commonChatRef = DotNetObjectReference.Create(this);
+  //     await module.InvokeVoidAsync("HubPage.setDotNetHelper", nameof(commonChatRef), commonChatRef);
+  //   }
+  // }
+
+
+  //[JSInvokable]
+  public async Task AddMessages(IEnumerable<MessageDto> messages)
+  {
+    Messages.AddRange(messages);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+  //[JSInvokable]
+  public async Task UpdateMessages(IEnumerable<MessageDto> messages)
+  {
+    foreach(var msg in messages)
+    {
+      var foundMsg = Messages.FirstOrDefault(f => f.Id == msg.Id);
+      foundMsg.Status = msg.Status;
+      foundMsg.ReadOn = msg.ReadOn;
+    }
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+
+
+  // public void Dispose()
+  // {
+  //   commonChatRef?.Dispose();
+  // }
+
+
+}

@@ -1,0 +1,22 @@
+﻿{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "ES6",
+    "outDir": "wwwroot/js",
+    "rootDirs": ["wwwroot/ts"]
+  },
+  "include": [
+    "wwwroot/ts/**/*.ts"
+  ],
+  "exclude": [
+    "wwwroot/css",
+    "wwwroot/js",
+    "wwwroot/lib",
+    "wwwroot/types",
+    "node_modules"
+  ]
+}

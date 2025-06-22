@@ -1,0 +1,49 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime jsRuntime
+@rendermode InteractiveServer
+
+
+<section>
+  <InputTextArea @bind-Value="@Text" />
+  <button @onclick="@HandleBtnClick">@BtnText</button>
+</section>
+
+
+
+@code {
+
+
+  /// <summary>
+  /// Текст отправляемого в чат сообщения.
+  /// </summary>
+  public string Text { get; set; }
+
+  /// <summary>
+  /// Текст кнопки, инициирующей отправку сообщения.
+  /// </summary>
+  /// <remarks>
+  /// Текст изменяется в зависимости от наличия выбранного в списке клиента.
+  /// Если ни один клиент не выбран, то сообщение будет отправлено в общий чат,
+  /// иначе - только выбранному в списке клиенту в приватный чат.
+  /// </remarks>
+  [Parameter]
+  public string BtnText { get; set; }
+
+
+
+  public async Task HandleBtnClick()
+  {
+    await jsRuntime.InvokeVoidAsync("HUBPAGE.CreateSystemMessage", Text);
+    Text = null;
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+
+  public void SetBtnText(string btnText)
+  {
+    BtnText = btnText;
+    StateHasChanged();
+  }
+
+}

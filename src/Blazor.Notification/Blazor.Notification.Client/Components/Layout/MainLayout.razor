@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+
+
+<script type="module" src="js/hubPage.js"></script>
+<script>
+
+  setTimeout(()=>{
+    window.HUBPAGE.hub =
+      new signalR.HubConnectionBuilder()
+        .withUrl("https://localhost:7118/BNHub")
+        .withServerTimeout(300000)
+        .withAutomaticReconnect()
+        .build();
+    window.HUBPAGE.init();
+  }, 350);
+
+</script>
+
+
+@Body
+
+@code {
+
+}

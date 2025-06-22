@@ -1,0 +1,33 @@
+﻿@inherits Blazor.Notification.Client.Components.MessageVM
+@rendermode InteractiveServer
+
+
+<li status="@Status">
+  <div>
+    <p>
+      <span class="from">@SenderName</span>
+      <span class="time">@CreatedOn</span>
+      <span class="status material-icons" size="s">
+        @IconName
+      </span>
+    </p>
+    <span class="text">@Text</span>
+  </div>
+</li>
+
+
+
+@code {
+
+
+  /// <summary>
+  /// Название иконки, выводимой в правой части компонента.
+  /// </summary>
+  public string IconName => Status switch
+  {
+    Models.Enums.MessageStatus.Sent => "check",
+    Models.Enums.MessageStatus.Read or Models.Enums.MessageStatus.Read | Models.Enums.MessageStatus.Sent => "done_all",
+    _ => ""
+  };
+
+}

@@ -1,0 +1,80 @@
+﻿@rendermode InteractiveServer
+@using Blazor.Notification.Models
+@using Blazor.Notification.Models.Dtos
+@inject IJSRuntime jsRuntime
+@implements IDisposable
+
+
+
+
+<ClientsList @ref="ClientsListRef" ItemsList="ServiceClients" SelectedClientId="SelectedClientId" />
+
+
+<MessageEditor />
+
+
+
+
+@code {
+
+
+  public ClientsListVM ClientsListRef { get; set; }
+
+
+  public MessageEditorVM MessageEditorRef { get; set; }
+
+
+  [Parameter]
+  public List<ServiceClientDto> ServiceClients { get; set; } = [];
+
+
+  public int SelectedClientId { get; set; }
+
+
+  private IJSObjectReference? module;
+
+
+  private DotNetObjectReference<AsidePanel>? homeRef;
+
+
+
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/hubPage.js");
+      homeRef = DotNetObjectReference.Create(this);
+      await module.InvokeVoidAsync("HubPage.setDotNetHelper", "dotNetHelper", homeRef);
+    }
+  }
+
+
+  [JSInvokable]
+  public async Task UpdateClientsList(IEnumerable<ServiceClientDto> serviceClients)
+  {
+    ServiceClients = serviceClients.ToList();
+    SelectedClientId = ServiceClients.FirstOrDefault(f => f.IsSelected)?.Id ?? 0;
+    ClientsListRef.UpdateClients(ServiceClients);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+  [JSInvokable]
+  public async Task UpdateClientInfo(ServiceClientDto serviceClientDto)
+  {
+    var foundClient = ServiceClients.FirstOrDefault(f => f.Id == serviceClientDto.Id);
+    //foundClient.UnreadCommonMsg = serviceClientDto.UnreadCommonMsg;
+    ClientsListRef.UpdateClients(ServiceClients);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+
+
+  public void Dispose()
+  {
+    homeRef?.Dispose();
+  }
+
+}

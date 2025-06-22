@@ -1,0 +1,28 @@
+﻿@using Blazor.Notification.Models
+@inherits Blazor.Notification.Client.Components.ClientInfoVM
+@rendermode InteractiveServer
+
+
+<li current="@IsCurrent" selected="@IsSelected" @onclick="HandleClickAsync">
+  <div>
+    <span class="nick">@Name</span>
+    <span class="cid">@ConnId</span>
+    <span class="msg-counter">
+      <span class="status material-icons" size="s">chat</span>
+      <span>@UnreadCommonMsg</span>
+    </span>
+
+    
+  </div>
+</li>
+
+
+
+@code {
+
+
+
+
+
+
+}

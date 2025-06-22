@@ -1,0 +1,46 @@
+﻿li {
+  display: block;
+  font-size: 14px;
+  padding: 0.6vh 0.2vw;
+  border-bottom: 1px dashed hsla(0, 0%, 0%, 0.2);
+}
+
+
+div {
+  display: grid;
+  align-items: flex-start;
+  grid-template-rows: auto 1fr;
+}
+
+
+  div p {
+    margin: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: 100px auto 1fr;
+    justify-content: space-between;
+  }
+
+
+span.time {
+  color: hsl(0, 0%, 55%);
+  font-size: 12px;
+}
+
+
+span.from {
+  font-size: 13px;
+  align-self: stretch;
+  color: hsl(210, 80%, 42%);
+}
+
+
+span.status {
+  justify-self: flex-end;
+  color: hsl(210, 80%, 42%);
+}
+
+
+
+span.text {
+}

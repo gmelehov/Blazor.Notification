@@ -1,0 +1,152 @@
+﻿@page "/"
+@using Blazor.Notification.Models
+@using Blazor.Notification.Models.Dtos
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.SignalR
+@using Blazor.Notification.Services
+@rendermode InteractiveServer
+@inject IJSRuntime jsRuntime
+@implements IAsyncDisposable
+
+
+
+<section>
+
+  <header>
+    <div class="main-title">Blazor.Notification</div>
+    <div class="private-title">Private chat</div>
+    <div class="common-title">Common chat</div>
+  </header>
+
+
+  <aside>
+    <ClientsList @ref="ClientsListRef" ItemsList="@ServiceClients" SelectedClientId="@SelectedClientId" />
+    <MessageEditor @ref="MessageEditorRef" BtnText="@BtnText" />
+  </aside>
+
+
+  <main>
+    <PrivateMessages @ref="PrivateMessagesRef" />
+    <CommonMessages @ref="CommonMessagesRef" />
+  </main>
+
+</section>
+
+
+
+
+
+
+@code {
+
+
+  private IJSObjectReference? module;
+
+
+  private DotNetObjectReference<Home>? homeRef;
+
+
+
+  public ClientsList ClientsListRef { get; set; }
+
+
+  public MessageEditor MessageEditorRef { get; set; }
+
+
+  public PrivateMessages PrivateMessagesRef { get; set; }
+
+
+  public CommonMessages CommonMessagesRef { get; set; }
+
+
+  [Parameter]
+  public string BtnText { get; set; } = "SEND TO COMMON CHAT";
+
+
+  [Parameter]
+  public string Cid { get; set; } = "";
+
+  [Parameter]
+  public List<ServiceClientDto> ServiceClients { get; set; } = [];
+
+
+  [Parameter]
+  public List<MessageDto> CommonMessagesList { get; set; } = [];
+
+
+  public int SelectedClientId { get; set; }
+
+
+
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/hubPage.js");
+      homeRef = DotNetObjectReference.Create(this);
+      await module.InvokeVoidAsync("HubPage.setDotNetHelper", "dotNetHelper", homeRef);
+    }
+  }
+
+
+
+
+
+  [JSInvokable]
+  public void UpdateClientsList(IEnumerable<ServiceClientDto> serviceClients)
+  {
+    ServiceClients = serviceClients.ToList();
+    SelectedClientId = ServiceClients.FirstOrDefault(f => f.IsSelected)?.Id ?? 0;
+    ClientsListRef.UpdateClients(ServiceClients);
+    StateHasChanged();
+  }
+
+
+  [JSInvokable]
+  public async Task AddMessages(IEnumerable<MessageDto> messages)
+  {
+    CommonMessagesRef.AddMessages(messages);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+  [JSInvokable]
+  public async Task UpdateMessages(IEnumerable<MessageDto> messages)
+  {
+    CommonMessagesRef.UpdateMessages(messages);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+  [JSInvokable]
+  public async Task UpdateSendBtnText(int clientId, string clientName)
+  {
+    this.BtnText = clientId != 0 && !string.IsNullOrWhiteSpace(clientName) ? $"SEND TO {clientName}" : "SEND TO COMMON CHAT";
+    MessageEditorRef.SetBtnText(BtnText);
+    await InvokeAsync(StateHasChanged);
+  }
+
+
+
+  
+
+
+
+  async ValueTask IAsyncDisposable.DisposeAsync()
+  {
+    if (module is not null)
+    {
+      try
+      {
+        await module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+      }
+    }
+
+    homeRef?.Dispose();
+  }
+
+}

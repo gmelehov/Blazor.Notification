@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Blazor.Notification.Models\Blazor.Notification.Models.csproj" />
+    <ProjectReference Include="..\Blazor.Notification.Services\Blazor.Notification.Services.csproj" />
+  </ItemGroup>
+
+</Project>
