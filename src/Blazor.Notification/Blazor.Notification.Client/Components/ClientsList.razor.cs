@@ -22,7 +22,11 @@ public class ClientsListVM : ComponentBase
     ItemsList = serviceClients.ToList();
     if (SelectedClientId > 0)
     {
-      ItemsList.FirstOrDefault(f => f.Id == SelectedClientId).IsSelected = true;
+      var foundItem = ItemsList.FirstOrDefault(f => f.Id == SelectedClientId);
+      if (foundItem != null)
+      {
+        foundItem.IsSelected = true;
+      }
     }
     StateHasChanged();
   }

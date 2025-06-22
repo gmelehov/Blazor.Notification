@@ -171,6 +171,8 @@ export interface IMessageDto
 
   ReceiverCid: string;
 
+  ReceiverName: string;
+
   SenderName: string;
 
   Status: MessageStatus;

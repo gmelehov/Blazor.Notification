@@ -46,7 +46,7 @@ builder.Services.AddSignalR(opts =>
   });
 
 
-//builder.Services.AddHostedService<NotificationWorker>();
+builder.Services.AddHostedService<NotificationWorker>();
 
 
 var app = builder.Build();

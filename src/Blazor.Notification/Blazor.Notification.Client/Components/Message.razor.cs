@@ -26,6 +26,10 @@ public class MessageVM : ComponentBase
 
 
   [Parameter]
+  public string ReceiverName { get; set; }
+
+
+  [Parameter]
   public int ReceiverId { get; set; }
 
 

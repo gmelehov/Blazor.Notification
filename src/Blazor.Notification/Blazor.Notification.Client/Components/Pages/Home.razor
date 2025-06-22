@@ -13,7 +13,9 @@
 <section>
 
   <header>
-    <div class="main-title">Blazor.Notification</div>
+    <div class="main-title">
+      <a href="https://localhost:7211" target="_blank" title="Запустить новый клиент">Blazor.Notification</a>
+    </div>
     <div class="private-title">@PrivateChatText</div>
     <div class="common-title">Common chat</div>
   </header>
@@ -97,7 +99,6 @@
 
 
 
-
   [JSInvokable]
   public void UpdateClientsList(IEnumerable<ServiceClientDto> serviceClients)
   {
@@ -141,14 +142,6 @@
   }
 
 
-
-
-
-
-
-
-
-
   [JSInvokable]
   public async Task UpdateSendBtnText(int clientId, string clientName, string clientCid)
   {
@@ -159,10 +152,6 @@
     MessageEditorRef.SetMessageRoute(clientId, clientCid);
     await InvokeAsync(StateHasChanged);
   }
-
-
-
-  
 
 
 

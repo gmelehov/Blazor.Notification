@@ -250,7 +250,7 @@ export class HubPage {
          */
         this.setDocumentTitle = () => {
             var _a, _b;
-            document.title = `${(_b = (_a = this.connection) === null || _a === void 0 ? void 0 : _a.Caller) === null || _b === void 0 ? void 0 : _b.Name} --- ${this.isActive}`;
+            document.title = `${(_b = (_a = this.connection) === null || _a === void 0 ? void 0 : _a.Caller) === null || _b === void 0 ? void 0 : _b.Name} --- ${this.isActive ? "active" : "inactive"}`;
         };
         /**
          * Сохраняет идентификатор выбранного в списке клиента.
@@ -273,15 +273,15 @@ export class HubPage {
             HubPage.updateSendButtonText(clientId, clientName, clientCid);
         };
         this.filterUnreadMessagesToMark = () => {
+            var _a, _b, _c;
             if (!this.isActive) {
                 return [];
             }
             else {
-                return this.client.Messages.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).map(m => m.Id);
+                return (_c = (_b = (_a = this.client) === null || _a === void 0 ? void 0 : _a.Messages) === null || _b === void 0 ? void 0 : _b.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).map(m => m.Id)) !== null && _c !== void 0 ? _c : [];
             }
         };
         this.hasPrivateMessagesWith = (clientId) => {
-            //return this.client.Messages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || (s.SenderId == s.ReceiverId && s.SenderId == this.client.Id)));
             return this.clientsMessages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || s.ReceiverId == clientId));
         };
     }
@@ -316,7 +316,7 @@ export class HubPage {
             console.error(err.toString());
             setTimeout(() => {
                 this.start();
-            }, 1000);
+            }, 800);
         });
     }
     /**

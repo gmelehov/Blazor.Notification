@@ -96,7 +96,7 @@ export class HubPage
       setTimeout(() =>
       {
         this.start();
-      }, 1000)
+      }, 800)
     });
   }
 
@@ -500,7 +500,7 @@ export class HubPage
    */
   setDocumentTitle = () =>
   {
-    document.title = `${this.connection?.Caller?.Name} --- ${this.isActive}`;
+    document.title = `${this.connection?.Caller?.Name} --- ${this.isActive ? "active" : "inactive"}`;
   }
 
 
@@ -541,14 +541,13 @@ export class HubPage
     }
     else
     {
-      return this.client.Messages.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).map(m => m.Id);
+      return this.client?.Messages?.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).map(m => m.Id) ?? [];
     }
   }
 
 
   hasPrivateMessagesWith = (clientId: number): boolean =>
   {
-    //return this.client.Messages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || (s.SenderId == s.ReceiverId && s.SenderId == this.client.Id)));
     return this.clientsMessages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || s.ReceiverId == clientId));
   }
 

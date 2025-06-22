@@ -5,7 +5,6 @@ using Blazor.Notification.Services;
 using Blazor.Notification.SignalR.Data;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Blazor.Notification.SignalR.Services;
@@ -60,6 +59,7 @@ public class HubContextService(AppDbContext appDbContext) : IHubContextService
         SenderId = ss.Message.SenderId ?? 0,
         ReceiverId = ss.ReceiverId,
         ReceiverCid = ss.Receiver.ActiveConnCid,
+        ReceiverName = ss.Receiver.Name,
         SenderName = ss.Message.Sender?.Name ?? "SYSTEM",
         Status = ss.Status,
         MsgRoute = ss.Message.MsgRoute,
@@ -94,6 +94,7 @@ public class HubContextService(AppDbContext appDbContext) : IHubContextService
         SenderId = ss.Message.SenderId ?? 0,
         ReceiverId = ss.ReceiverId,
         ReceiverCid = ss.Receiver.ActiveConnCid,
+        ReceiverName = ss.Receiver.Name,
         SenderName = ss.Message.Sender?.Name ?? "SYSTEM",
         Status = ss.Status,
         MsgRoute = ss.Message.MsgRoute,
@@ -112,7 +113,7 @@ public class HubContextService(AppDbContext appDbContext) : IHubContextService
   {
     var clients = GetActiveClientDtos();
     var totalUnreadMessagesCount = clients.Sum(s => s.UnreadCommonMsg);
-    var msgText = $"Количество подключенных клиентов - {clients.Count()}. Всего непрочтенных сообщений в общем чате - {totalUnreadMessagesCount}.";
+    var msgText = $"Количество подключенных клиентов - {clients.Count()}.";
 
     var message = new Message
     {

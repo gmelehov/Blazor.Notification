@@ -74,7 +74,7 @@ public class AppDbContext : DbContext
 
     modelBuilder.Entity<MessageToClient>(ent => 
     {
-      ent.HasOne(h => h.Receiver).WithMany(m => m.InBox).HasForeignKey(f => f.ReceiverId).OnDelete(DeleteBehavior.Cascade).IsRequired(true);
+      ent.HasOne(h => h.Receiver).WithMany(m => m.InBox).HasForeignKey(f => f.ReceiverId).OnDelete(DeleteBehavior.NoAction).IsRequired(true);
     });
 
     modelBuilder.Entity<ServiceClient>(ent =>

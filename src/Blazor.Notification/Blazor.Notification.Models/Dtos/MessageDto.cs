@@ -35,6 +35,11 @@ public class MessageDto
   public string ReceiverCid { get; set; }
 
   /// <summary>
+  /// Отображаемое название клиента-получателя.
+  /// </summary>
+  public string ReceiverName { get; set; }
+
+  /// <summary>
   /// Отображаемое название клиента-отправителя.
   /// </summary>
   public string SenderName { get; set; }

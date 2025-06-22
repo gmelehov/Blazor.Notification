@@ -27,8 +27,6 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
   public override async Task OnConnectedAsync()
   {
     var cid = Context.ConnectionId;
-    //var prevcid = _hubDataStorageService.GetItem("cid")?.ToString() ?? null;
-
 
     /// Подключение к хабу только что установлено, создаем объект Connection
     /// и заполняем его всей доступной на этот момент информацией.
@@ -95,8 +93,8 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
       _appDbContext.SaveChanges();
     }
 
-    /// Удаляем объект подключения из всех браузеров всех посетителей сайта
-    await Clients.All.RemConnectedClient(cid, conn.CallerId.Value);
+    ///// Удаляем объект подключения из всех браузеров всех посетителей сайта
+    //await Clients.All.RemConnectedClient(cid, conn.CallerId.Value);
 
     await base.OnDisconnectedAsync(exception);
   }
@@ -337,6 +335,7 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
       SenderId = s.Message.SenderId ?? 0,
       ReceiverId = s.ReceiverId,
       ReceiverCid = s.Receiver.ActiveConnCid,
+      ReceiverName = s.Receiver.Name,
       SenderName = s.Message.Sender?.Name ?? "SYSTEM",
       Status = s.Status,
       MsgRoute = s.Message.MsgRoute,
