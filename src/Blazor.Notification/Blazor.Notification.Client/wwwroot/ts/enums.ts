@@ -118,27 +118,15 @@ export enum HubEvents
 
   RcvUpdatedPath = "RcvUpdatedPath",
 
-  EnsureActualCid = "EnsureActualCid",
-
   RcvMyConnection = "RcvMyConnection",
-
-  UpdMyConnection = "UpdMyConnection",
-
-  RemConnectedClient = "RemConnectedClient",
-
-  AddConnectedClient = "AddConnectedClient",
 
   RcvActiveClients = "RcvActiveClients",
 
-  RcvClientMessages = "RcvClientMessages",
-
   RcvMessagesUpdateEvent = "RcvMessagesUpdateEvent",
 
-  RcvSystemMessage = "RcvSystemMessage",
-
-  RcvClientUpdate = "RcvClientUpdate",
-
   RequestClientsUpdate = "RequestClientsUpdate",
+
+  RcvMyClientDto = "RcvMyClientDto",
 
 }
 
@@ -154,18 +142,40 @@ export enum HubMethods
 
   GetMyConnection = "GetMyConnection",
 
-  RewriteActualCid = "RewriteActualCid",
-
   UpdateCallerInfo = "UpdateCallerInfo",
-
-  UpdateMyConnection = "UpdateMyConnection",
 
   SendActiveClientsList = "SendActiveClientsList",
 
   MarkUnreadMessages = "MarkUnreadMessages",
 
-  CreateClientMessage = "CreateClientMessage",
+  GetMyClientDto = "GetMyClientDto",
 
-  CreateSystemMessage = "CreateSystemMessage",
+  PublishCommonMessage = "PublishCommonMessage",
+
+  PublishPrivateMessage = "PublishPrivateMessage"
+
+}
+
+
+
+
+/**
+ * Названия методов Blazor-компонентов, выполняющихся на стороне javascript-клиента,
+ * осуществившего подключение к хабу SignalR.
+ */
+export enum DotNetMethods
+{
+
+  UpdateSendBtnText = "UpdateSendBtnText",
+
+  UpdateClientsList = "UpdateClientsList",
+
+  UpdateClientInfo = "UpdateClientInfo",
+
+  AddMessages = "AddMessages",
+
+  AddPrivateMessages = "AddPrivateMessages",
+
+  UpdateMessages = "UpdateMessages",
 
 }

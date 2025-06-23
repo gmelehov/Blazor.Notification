@@ -49,17 +49,11 @@ export var HubEvents;
 (function (HubEvents) {
     HubEvents["RcvConnectedEvent"] = "RcvConnectedEvent";
     HubEvents["RcvUpdatedPath"] = "RcvUpdatedPath";
-    HubEvents["EnsureActualCid"] = "EnsureActualCid";
     HubEvents["RcvMyConnection"] = "RcvMyConnection";
-    HubEvents["UpdMyConnection"] = "UpdMyConnection";
-    HubEvents["RemConnectedClient"] = "RemConnectedClient";
-    HubEvents["AddConnectedClient"] = "AddConnectedClient";
     HubEvents["RcvActiveClients"] = "RcvActiveClients";
-    HubEvents["RcvClientMessages"] = "RcvClientMessages";
     HubEvents["RcvMessagesUpdateEvent"] = "RcvMessagesUpdateEvent";
-    HubEvents["RcvSystemMessage"] = "RcvSystemMessage";
-    HubEvents["RcvClientUpdate"] = "RcvClientUpdate";
     HubEvents["RequestClientsUpdate"] = "RequestClientsUpdate";
+    HubEvents["RcvMyClientDto"] = "RcvMyClientDto";
 })(HubEvents || (HubEvents = {}));
 /**
  * Названия методов, определенных в хабе SignalR, выполняющихся на бэкенде
@@ -68,12 +62,24 @@ export var HubEvents;
 export var HubMethods;
 (function (HubMethods) {
     HubMethods["GetMyConnection"] = "GetMyConnection";
-    HubMethods["RewriteActualCid"] = "RewriteActualCid";
     HubMethods["UpdateCallerInfo"] = "UpdateCallerInfo";
-    HubMethods["UpdateMyConnection"] = "UpdateMyConnection";
     HubMethods["SendActiveClientsList"] = "SendActiveClientsList";
     HubMethods["MarkUnreadMessages"] = "MarkUnreadMessages";
-    HubMethods["CreateClientMessage"] = "CreateClientMessage";
-    HubMethods["CreateSystemMessage"] = "CreateSystemMessage";
+    HubMethods["GetMyClientDto"] = "GetMyClientDto";
+    HubMethods["PublishCommonMessage"] = "PublishCommonMessage";
+    HubMethods["PublishPrivateMessage"] = "PublishPrivateMessage";
 })(HubMethods || (HubMethods = {}));
+/**
+ * Названия методов Blazor-компонентов, выполняющихся на стороне javascript-клиента,
+ * осуществившего подключение к хабу SignalR.
+ */
+export var DotNetMethods;
+(function (DotNetMethods) {
+    DotNetMethods["UpdateSendBtnText"] = "UpdateSendBtnText";
+    DotNetMethods["UpdateClientsList"] = "UpdateClientsList";
+    DotNetMethods["UpdateClientInfo"] = "UpdateClientInfo";
+    DotNetMethods["AddMessages"] = "AddMessages";
+    DotNetMethods["AddPrivateMessages"] = "AddPrivateMessages";
+    DotNetMethods["UpdateMessages"] = "UpdateMessages";
+})(DotNetMethods || (DotNetMethods = {}));
 //# sourceMappingURL=enums.js.map

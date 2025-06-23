@@ -71,7 +71,6 @@ public class HubContextService(AppDbContext appDbContext) : IHubContextService
 
 
 
-
   public ServiceClientDto GetCurrentClientDto(HubCallerContext ctx) => _appDbContext.ServiceClients
     .Where(w => w.Id == GetCurrentConnection(ctx).CallerId)
     .Include(i => i.Connections)
@@ -107,8 +106,6 @@ public class HubContextService(AppDbContext appDbContext) : IHubContextService
 
 
 
-
-
   public async Task<IEnumerable<string>> CreateBackgroundSystemMessage()
   {
     var clients = GetActiveClientDtos();
@@ -139,10 +136,5 @@ public class HubContextService(AppDbContext appDbContext) : IHubContextService
 
     return await Task.FromResult(clients.Select(s => s.Cid));
   }
-
-
-  
-
-
 
 }

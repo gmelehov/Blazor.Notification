@@ -13,9 +13,6 @@ public static class ServiceExtensions
 {
 
 
-
-
-
   public static IServiceCollection AddHubContextServices(this IServiceCollection scoll) =>
     scoll
     .AddDbContext<AppDbContext>(opts =>
@@ -25,8 +22,5 @@ public static class ServiceExtensions
     })
     .AddScoped<IHubContextService, HubContextService>()
     ;
-
-
-
 
 }

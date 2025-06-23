@@ -1,4 +1,4 @@
-import { HubEvents, HubMethods, MessageRoute, MessageStatus } from './enums.js';
+import { DotNetMethods, HubEvents, HubMethods, MessageRoute, MessageStatus } from './enums.js';
 /**
  * Класс для взаимодействия Blazor-компонентов
  * с подключением к хабу SignalR.
@@ -33,15 +33,6 @@ export class HubPage {
             this.GetMyConnection();
         };
         /**
-         * Обработчик события EnsureActualCid.
-         * @param cid
-         */
-        this.onEnsureActualCid = (cid) => {
-            this.cid = cid;
-            window.sessionStorage.setItem('cid', cid);
-            window.localStorage.setItem('cid', cid);
-        };
-        /**
          * Обработчик события RcvConnectedEvent.
          * Сохраняет код текущего (только что созданного) подключения в свойство cid этого объекта.
          * Сохранять его в Session Storage браузера сейчас нельзя, т.к. в данный момент в нем
@@ -68,8 +59,15 @@ export class HubPage {
             if (!window.sessionStorage.getItem("selectedClientId")) {
                 window.sessionStorage.setItem('selectedClientId', "0");
             }
-            this.hub.invoke("GetMyClientDto");
+            this.GetMyClientDto();
         };
+        /**
+         * Обработчик события RcvMyClientDto.
+         * Получает с сервера объект текущего клиента и сохраняет его в списке активных клиентов в этом объекте.
+         * Вызывает серверный метод SendActiveClientsList для получения
+         * списка всех активных клиентов, подключенных к хабу.
+         * @param clientDto
+         */
         this.onRcvMyClientDto = (clientDto) => {
             var _a;
             if (!this.clientsList.find(f => f.Id == clientDto.Id)) {
@@ -84,20 +82,6 @@ export class HubPage {
                 let unreadMessageIds = this.filterUnreadMessagesToMark();
                 this.MarkUnreadMessages(unreadMessageIds);
             }
-            this.SendActiveClientsList();
-        };
-        /**
-         * Обработчик события UpdMyConnection.
-         * Получает с сервера объект текущего подключения и сохраняет его в этом объекте.
-         * Событие можно инициировать на стороне сервера в любое время при необходимости,
-         * не разрывая текущего подключения.
-         * @param conn
-         */
-        this.onUpdMyConnection = (conn) => {
-            if (this.connection.Cid === conn.Cid) {
-                this.connection = conn;
-            }
-            ;
             this.SendActiveClientsList();
         };
         /**
@@ -117,24 +101,8 @@ export class HubPage {
             this.setSelectedClientId(selClientId);
             let commonMessages = this.client.Messages.filter(f => f.MsgRoute == MessageRoute.Common);
             HubPage.addMessagesToCommonChat(commonMessages);
-            let privateMessages = this.client.Messages.filter(f => f.MsgRoute == MessageRoute.Private
-            //&& selClientId != 0
-            //&& (f.SenderId == this.client.Id || f.SenderId == selClientId || f.ReceiverId == this.client.Id || f.ReceiverId == selClientId)
-            );
+            let privateMessages = this.client.Messages.filter(f => f.MsgRoute == MessageRoute.Private);
             HubPage.addMessagesToPrivateChat(privateMessages);
-            let unreadMessageIds = this.filterUnreadMessagesToMark();
-            this.MarkUnreadMessages(unreadMessageIds);
-        };
-        /**
-         * Обрабатывает событие RcvClientUpdate.
-         * @param client
-         */
-        this.onRcvClientUpdate = (client) => {
-            let foundClient = this.clientsList.find(f => f.Id === client.Id);
-            if (!!foundClient) {
-                let index = this.clientsList.indexOf(foundClient);
-                this.clientsList.splice(index, 1, client);
-            }
             let unreadMessageIds = this.filterUnreadMessagesToMark();
             this.MarkUnreadMessages(unreadMessageIds);
         };
@@ -147,63 +115,14 @@ export class HubPage {
             this.MarkUnreadMessages(unreadMessageIds);
         };
         /**
-         * Обработчик события RemConnectedClient.
-         * @param cid
-         * @param clientId
-         */
-        this.onRemConnectedClient = (cid, clientId) => {
-            let found = this.clientsList.find(f => f.Id === clientId);
-            let index = this.clientsList.indexOf(found);
-            this.clientsList.splice(index, 1);
-        };
-        /**
-         * Обработчик соьбытия AddConnectedClient.
-         * @param cid
-         * @param client
-         */
-        this.onAddConnectedClient = (cid, client) => {
-        };
-        /**
-         * Обработчик события RcvClientMessages.
-         * @param messages
-         */
-        this.onRcvClientMessages = (messages) => {
-        };
-        /**
-         * Обработчик события RcvSystemMessage.
-         * @param message
-         */
-        this.onRcvSystemMessage = async (message) => {
-            let newMessages = [];
-            if (true) {
-                let foundMsg = this.client.Messages.find(f => f.Id === message.Id);
-                foundMsg.Status = MessageStatus.Read;
-                message.Status = MessageStatus.Read;
-            }
-            newMessages.push(message);
-            //this.messages.push(message);
-            console.dir(message);
-            await globalThis.HUBPAGE.constructor.addMessagesToCommonChat(newMessages);
-            //HubPage.addMessagesToCommonChat(newMessages);
-            setTimeout(() => {
-                this.MarkUnreadMessages(this.filterUnreadMessagesToMark());
-            }, 150);
-            //HubPage.prototype.commonChatRef.invokeMethodAsync("AddMessages", newMessages);
-            //this.SendActiveClientsList();
-            //this.client.UnreadCommonMsg = this.filterUnreadMessagesToMark().length;
-            //await HubPage.updateClientInfo(this.client);
-        };
-        /**
          * Обработчик события RcvMessagesUpdateEvent.
          */
         this.onRcvMessagesUpdateEvent = (messages) => {
-            //console.dir(messages);
             messages.forEach(msg => {
                 let foundMsg = this.client.Messages.find(f => f.Id === msg.Id);
                 foundMsg.Status = msg.Status;
                 foundMsg.ReadOn = msg.ReadOn;
             });
-            //this.client.UnreadCommonMsg = this.filterUnreadMessagesToMark().length;
             this.SendActiveClientsList();
             if (!!messages.length) {
                 HubPage.markCommonChatMessagesAsRead(messages);
@@ -215,10 +134,10 @@ export class HubPage {
          */
         this.GetMyConnection = () => this.hub.invoke(HubMethods.GetMyConnection);
         /**
-         * Вызов серверного метода RewriteActualCid.
+         * Вызов серверного метода GetMyClientDto.
          * @returns
          */
-        this.RewriteActualCid = () => this.hub.invoke(HubMethods.RewriteActualCid);
+        this.GetMyClientDto = () => this.hub.invoke(HubMethods.GetMyClientDto);
         /**
          * Вызов серверного метода UpdateCallerInfo, в который передаются сведения
          * о коде подключения из Session Storage браузера
@@ -230,11 +149,6 @@ export class HubPage {
             let uagent = window.navigator.userAgent;
             this.hub.invoke(HubMethods.UpdateCallerInfo, window.location.pathname, uagent, pcid);
         };
-        /**
-         * Вызов серверного метода UpdateMyConnection.
-         * @returns
-         */
-        this.UpdateMyConnection = () => this.hub.invoke(HubMethods.UpdateMyConnection);
         /**
          * Вызов серверного метода MarkUnreadMessages.
          * @param messageIds
@@ -272,6 +186,11 @@ export class HubPage {
             }
             HubPage.updateSendButtonText(clientId, clientName, clientCid);
         };
+        /**
+         * Возвращает список идентификаторов непрочтенных на клиенте сообщений,
+         * которые нужно передать на сервер для изменения их статуса на "прочтенные".
+         * @returns
+         */
         this.filterUnreadMessagesToMark = () => {
             var _a, _b, _c;
             if (!this.isActive) {
@@ -281,6 +200,12 @@ export class HubPage {
                 return (_c = (_b = (_a = this.client) === null || _a === void 0 ? void 0 : _a.Messages) === null || _b === void 0 ? void 0 : _b.filter(f => f.Status != MessageStatus.Read && this.connection.CallerId === f.ReceiverId).map(m => m.Id)) !== null && _c !== void 0 ? _c : [];
             }
         };
+        /**
+         * Возвращает признак наличия сообщений в приватном чате между текущим клиентом
+         * и клиентом с указанным идентификатором.
+         * @param clientId
+         * @returns
+         */
         this.hasPrivateMessagesWith = (clientId) => {
             return this.clientsMessages.some(s => s.MsgRoute == MessageRoute.Private && (s.SenderId == clientId || s.ReceiverId == clientId));
         };
@@ -324,37 +249,12 @@ export class HubPage {
      */
     init() {
         this.hub.on(HubEvents.RcvUpdatedPath, this.onRcvUpdatedPath);
-        this.hub.on(HubEvents.EnsureActualCid, this.onEnsureActualCid);
         this.hub.on(HubEvents.RcvConnectedEvent, this.onRcvConnectedEvent);
         this.hub.on(HubEvents.RcvMyConnection, this.onRcvMyConnection);
-        this.hub.on(HubEvents.UpdMyConnection, this.onUpdMyConnection);
         this.hub.on(HubEvents.RcvActiveClients, this.onRcvActiveClients);
-        this.hub.on(HubEvents.RemConnectedClient, this.onRemConnectedClient);
-        this.hub.on(HubEvents.AddConnectedClient, this.onAddConnectedClient);
-        globalThis.HUBPAGE.hub.on(HubEvents.RcvSystemMessage, function (message) {
-            let newMessages = [];
-            if (true) {
-                let foundMsg = this.client.Messages.find(f => f.Id === message.Id);
-                foundMsg.Status = MessageStatus.Read;
-                message.Status = MessageStatus.Read;
-            }
-            newMessages.push(message);
-            //this.messages.push(message);
-            console.dir(message);
-            globalThis.HUBPAGE.constructor.addMessagesToCommonChat(newMessages);
-            //HubPage.addMessagesToCommonChat(newMessages);
-            setTimeout(() => {
-                this.MarkUnreadMessages(this.filterUnreadMessagesToMark());
-            }, 150);
-            //HubPage.prototype.commonChatRef.invokeMethodAsync("AddMessages", newMessages);
-            //this.SendActiveClientsList();
-            //this.client.UnreadCommonMsg = this.filterUnreadMessagesToMark().length;
-            //await HubPage.updateClientInfo(this.client);
-        });
         this.hub.on(HubEvents.RcvMessagesUpdateEvent, this.onRcvMessagesUpdateEvent);
-        this.hub.on(HubEvents.RcvClientUpdate, this.onRcvClientUpdate);
         this.hub.on(HubEvents.RequestClientsUpdate, this.onRequestClientsUpdate);
-        this.hub.on("RcvMyClientDto", this.onRcvMyClientDto);
+        this.hub.on(HubEvents.RcvMyClientDto, this.onRcvMyClientDto);
         this.start();
     }
     /**
@@ -365,31 +265,60 @@ export class HubPage {
         this.hub.invoke(HubMethods.SendActiveClientsList);
     }
     CreateSystemMessage(text) {
-        this.hub.invoke("PublishCommonMessage", text);
+        this.hub.invoke(HubMethods.PublishCommonMessage, text);
     }
     CreatePrivateMessage(receiverId, receiverCid, text) {
-        this.hub.invoke("PublishPrivateMessage", receiverId, receiverCid, text);
+        this.hub.invoke(HubMethods.PublishPrivateMessage, receiverId, receiverCid, text);
     }
+    /**
+     * Метод для проброса ссылки на компонент Blazor, метод которого должен быть вызван из JS.
+     * @param prop
+     * @param value
+     */
     static setDotNetHelper(prop, value) {
         HubPage[prop] = value;
     }
+    /**
+     * Вызов метода UpdateSendBtnText компонента Home.
+     * @param clientId
+     * @param clientName
+     * @param clientCid
+     */
     static async updateSendButtonText(clientId, clientName, clientCid) {
-        await HubPage.dotNetHelper.invokeMethodAsync("UpdateSendBtnText", clientId, clientName, clientCid);
+        await HubPage.dotNetHelper.invokeMethodAsync(DotNetMethods.UpdateSendBtnText, clientId, clientName, clientCid);
     }
+    /**
+     * Вызов метода UpdateClientsList компонента Home.
+     */
     static async updateClientsList(clients) {
-        await HubPage.dotNetHelper.invokeMethodAsync("UpdateClientsList", clients);
+        await HubPage.dotNetHelper.invokeMethodAsync(DotNetMethods.UpdateClientsList, clients);
     }
+    /**
+     * Вызов метода UpdateClientInfo компонента Home.
+     */
     static async updateClientInfo(client) {
-        await HubPage.dotNetHelper.invokeMethodAsync("UpdateClientInfo", client);
+        await HubPage.dotNetHelper.invokeMethodAsync(DotNetMethods.UpdateClientInfo, client);
     }
+    /**
+     * Вызов метода AddMessages компонента Home.
+     * @param messages
+     */
     static async addMessagesToCommonChat(messages) {
-        await HubPage.dotNetHelper.invokeMethodAsync("AddMessages", messages);
+        await HubPage.dotNetHelper.invokeMethodAsync(DotNetMethods.AddMessages, messages);
     }
+    /**
+     * Вызов метода AddPrivateMessages компонента Home.
+     * @param messages
+     */
     static async addMessagesToPrivateChat(messages) {
-        await HubPage.dotNetHelper.invokeMethodAsync("AddPrivateMessages", messages);
+        await HubPage.dotNetHelper.invokeMethodAsync(DotNetMethods.AddPrivateMessages, messages);
     }
+    /**
+     * Вызов метода UpdateMessages компонента Home.
+     * @param messages
+     */
     static async markCommonChatMessagesAsRead(messages) {
-        await HubPage.dotNetHelper.invokeMethodAsync("UpdateMessages", messages);
+        await HubPage.dotNetHelper.invokeMethodAsync(DotNetMethods.UpdateMessages, messages);
     }
 }
 globalThis.HUBPAGE = new HubPage();

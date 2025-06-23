@@ -5,7 +5,6 @@ using Blazor.Notification.Services;
 using Blazor.Notification.SignalR.Data;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 
 namespace Blazor.Notification.SignalR.Hubs;
@@ -38,22 +37,6 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
       IsActive = true,
       ConnectReason = ConnectReason.AfterStart,
     };
-
-
-    //if (prevcid != null && cid != prevcid)
-    //{
-    //  var prev = _appDbContext.Connections.Where(w => w.Cid == prevcid).FirstOrDefault();
-    //  prev.Close();
-    //  prev.DisconnectReason = DisconnectReason.OnRefresh;
-    //  _appDbContext.Connections.Update(prev);
-    //  _appDbContext.SaveChanges();
-
-    //  conn.Previous = prev;
-    //  conn.ConnectReason = ConnectReason.AfterRefresh;
-    //  conn.CallerId = prev.CallerId;
-    //}
-
-
 
     _appDbContext.Connections.Add(conn);
     _appDbContext.SaveChanges();
@@ -93,12 +76,8 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
       _appDbContext.SaveChanges();
     }
 
-    ///// Удаляем объект подключения из всех браузеров всех посетителей сайта
-    //await Clients.All.RemConnectedClient(cid, conn.CallerId.Value);
-
     await base.OnDisconnectedAsync(exception);
   }
-
 
 
   /// <summary>
@@ -113,19 +92,10 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
     {
       ret = "localhost";
     }
-    ;
 
     return ret;
   }
 
-
-
-  /// <summary>
-  /// <para>Транслирует идентификатор текущего подключения в браузер вызвавшего клиента.</para>
-  /// <para>Обеспечивает отслеживание цепочки подключений после закрытия предыдущего подключения и открытия нового.</para>
-  /// </summary>
-  /// <returns></returns>
-  public async Task RewriteActualCid() => await Clients.Caller.EnsureActualCid(Context.ConnectionId);
 
   /// <summary>
   /// <para>Запрос на отправку вызвавшему посетителю данных о текущем подключении.</para>
@@ -135,13 +105,6 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
 
 
   public async Task GetMyClientDto() => await Clients.Caller.RcvMyClientDto(_hubContextService.GetCurrentClientDto(Context));
-
-  /// <summary>
-  /// <para>Запрос на отправку вызвавшему посетителю данных о его подключении.</para>
-  /// </summary>
-  /// <returns></returns>
-  public async Task UpdateMyConnection() => await Clients.Caller.UpdMyConnection(_hubContextService.GetCurrentConnection(Context));
-
 
   /// <summary>
   /// Обновляет данные текущего подключения.
@@ -188,13 +151,8 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
       _appDbContext.SaveChanges();
     }
 
-    
     await Clients.Caller.RcvUpdatedPath(cid, prevcid);
-
-    await Clients.AllExcept(cid).AddConnectedClient(cid, conn.Caller);
   }
-
-
 
   /// <summary>
   /// Запрос на отправку списка всех подключенных в настоящий момент клиентов.
@@ -203,18 +161,8 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
   public async Task SendActiveClientsList()
   {
     var clients = _hubContextService.GetActiveClientDtos();
-
-    //foreach (var client in clients)
-    //{
-    //  var unreadMsgs = _appDbContext.MessageReceivers.Count(w => w.ReceiverId == client.Id && w.Status != MessageStatus.Read);
-    //  client.UnreadCommonMsg = unreadMsgs;
-    //}
-
     await Clients.Caller.RcvActiveClients(clients);
   }
-
-
-
 
 
   public async Task PublishCommonMessage(string text)
@@ -252,8 +200,6 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
   }
 
 
-
-
   public async Task PublishPrivateMessage(int receiverId, string receiverCid, string text)
   {
     var caller = _hubContextService.GetCurrentCaller(Context);
@@ -289,15 +235,6 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
 
     await Clients.Clients([receiverCid, caller.ActiveConnCid]).RcvActiveClients(_hubContextService.GetActiveClientDtos());
   }
-
-
-
-
-
-  
-
-
-
 
 
   /// <summary>
@@ -346,110 +283,5 @@ public class BNHub(AppDbContext appDbContext, IHubContextService hubContextServi
 
     await Clients.Caller.RcvMessagesUpdateEvent(messageDtos);
   }
-
-
-  /// <summary>
-  /// Запрос на создание нового сообщения от клиента.
-  /// </summary>
-  /// <param name="text">Текст сообщения.</param>
-  /// <param name="receiverIds">Массив идентификаторов клиентов-получателей сообщения.</param>
-  /// <returns></returns>
-  public async Task CreateClientMessage(string text, params int[] receiverIds)
-  {
-    var sender = _hubContextService.GetCurrentCaller(Context);
-    var message = new Message
-    {
-      CreatedOn = DateTime.Now,
-      Type = MessageType.Client,
-      Text = text,
-      Sender = sender,
-      SenderId = sender.Id,
-    };
-
-    /// Убираем из списка идентификаторов клиентов-получателей идентификатор
-    /// текущего клиента-отправителя.
-    var filteredReceiverIds = receiverIds?.Where(w => w != sender.Id).ToArray();
-
-    /// Если в списке остался хотя бы один идентификатор, то это сообщение будем отправлять по личным чатам получателей.
-    /// Если в списке не осталось ни одного идентификатора, то это сообщение будет отправлено в общий чат.
-    message.MsgRoute = filteredReceiverIds.Any() ? MessageRoute.Private : MessageRoute.Common;
-
-
-    foreach (var id in filteredReceiverIds)
-    {
-      var msgToClient = new MessageToClient
-      {
-        Status = MessageStatus.Sent,
-        Message = message,
-        ReceiverId = id,
-      };
-
-      message.Receivers.Add(msgToClient);
-    }
-
-    _appDbContext.Messages.Add(message);
-    _appDbContext.SaveChanges();
-
-
-  }
-
-
-  public async Task CreateSystemMessage(string text)
-  {
-    var message = new Message
-    {
-      CreatedOn = DateTime.Now,
-      Type = MessageType.System,
-      MsgRoute = MessageRoute.Common,
-      Text = text,
-      SenderId = null
-    };
-
-    var clients = _hubContextService.GetActiveClientDtos();
-
-    foreach(var client in clients)
-    {
-      message.Receivers.Add(new MessageToClient
-      {
-        Status = MessageStatus.Sent,
-        Message = message,
-        ReceiverId = client.Id,
-      });
-      
-    }
-
-    _appDbContext.Messages.Add(message);
-    _appDbContext.SaveChanges();
-
-
-    List<MessageDto> dtos = [];
-
-    foreach(var client in clients)
-    {
-      var msg = message.Receivers.FirstOrDefault(f => f.ReceiverId == client.Id);
-      var dto = new MessageDto
-      {
-        Id = msg.Id,
-        MessageId = message.Id,
-        SenderId = 0,
-        ReceiverId = client.Id,
-        ReceiverCid = client.Cid,
-        SenderName = "SYSTEM",
-        Status = msg.Status,
-        MsgRoute = message.MsgRoute,
-        CreatedOn = message.CreatedOn,
-        ReadOn = null,
-        Text = message.Text
-      };
-      dtos.Add(dto);
-
-      await Clients.Client(client.Cid).RcvClientUpdate(client);
-    }
-  }
-
-
-
-
-
 
 }
